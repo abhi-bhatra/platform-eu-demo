@@ -1,0 +1,10 @@
+# Required for Crossplane v2 pipeline compositions (both db-demo-local and db-small-eu-west).
+# Apply before applying any Composition.
+#
+# Apply: kubectl apply -f crossplane/function-patch-and-transform-install.yaml
+apiVersion: pkg.crossplane.io/v1
+kind: Function
+metadata:
+  name: function-patch-and-transform
+spec:
+  package: xpkg.crossplane.io/crossplane-contrib/function-patch-and-transform:v0.18.0

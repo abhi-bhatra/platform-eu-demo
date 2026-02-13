@@ -16,35 +16,43 @@ spec:
   compositeTypeRef:
     apiVersion: myplatform.io/v1
     kind: DatabaseInstance
-  resources:
-    - name: database-demo
-      base:
-        apiVersion: kubernetes.crossplane.io/v1alpha2
-        kind: Object
-        spec:
-          forProvider:
-            manifest:
-              apiVersion: v1
-              kind: ConfigMap
-              metadata:
-                namespace: default
-                labels:
-                  platform: backend-first-demo
-              data:
-                kind: database
-                size: "small"
-                region: eu-west-1
-                team: checkout
-      patches:
-        - type: FromCompositeFieldPath
-          fromFieldPath: metadata.name
-          toFieldPath: spec.forProvider.manifest.metadata.name
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.size
-          toFieldPath: spec.forProvider.manifest.data.size
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.region
-          toFieldPath: spec.forProvider.manifest.data.region
-        - type: FromCompositeFieldPath
-          fromFieldPath: spec.team
-          toFieldPath: spec.forProvider.manifest.data.team
+  mode: Pipeline
+  pipeline:
+    - step: patch-and-transform
+      functionRef:
+        name: function-patch-and-transform
+      input:
+        apiVersion: pt.fn.crossplane.io/v1beta1
+        kind: Resources
+        resources:
+          - name: database-demo
+            base:
+              apiVersion: kubernetes.crossplane.io/v1alpha2
+              kind: Object
+              spec:
+                forProvider:
+                  manifest:
+                    apiVersion: v1
+                    kind: ConfigMap
+                    metadata:
+                      namespace: default
+                      labels:
+                        platform: backend-first-demo
+                    data:
+                      kind: database
+                      size: "small"
+                      region: eu-west-1
+                      team: checkout
+            patches:
+              - type: FromCompositeFieldPath
+                fromFieldPath: metadata.name
+                toFieldPath: spec.forProvider.manifest.metadata.name
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.size
+                toFieldPath: spec.forProvider.manifest.data.size
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.region
+                toFieldPath: spec.forProvider.manifest.data.region
+              - type: FromCompositeFieldPath
+                fromFieldPath: spec.team
+                toFieldPath: spec.forProvider.manifest.data.team

@@ -8,12 +8,21 @@
 ## Apply order
 
 1. Install Gatekeeper (if not already): [Gatekeeper install](https://open-policy-agent.github.io/gatekeeper/website/docs/install/).
-2. Apply the template, then the constraint:
+2. Apply template, wait for CRD, then apply constraint. **From repo root**, either run the script:
 
 ```bash
-kubectl apply -f constraint-template-database-instance.yaml
-kubectl apply -f constraint-database-instance.yaml
+./opa/apply-in-order.sh
 ```
+
+   or do it manually (run from repo root so paths work):
+
+```bash
+kubectl apply -f opa/constraint-template-database-instance.yaml
+kubectl wait --for=condition=Established crd/databaseinstancepolicies.constraints.gatekeeper.sh --timeout=60s
+kubectl apply -f opa/constraint-database-instance.yaml
+```
+
+   If the wait fails, the CRD wasn’t created. Check: `kubectl get crd | grep gatekeeper` and `kubectl get pods -n gatekeeper-system`.
 
 ## Demo (Step B)
 

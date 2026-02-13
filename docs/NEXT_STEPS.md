@@ -34,18 +34,35 @@ Use the **demo composition** so the demo works on k3s without any cloud account.
 
 ### 2.1 Install provider-kubernetes (talks to your k3s cluster)
 
+**Do not** use the repo’s `package/crossplane.yaml` — that uses `meta.pkg.crossplane.io/v1` (for building packages), which your cluster doesn’t have. Use the install manifest in this repo instead:
+
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/crossplane-contrib/provider-kubernetes/main/package/crossplane.yaml
+kubectl apply -f crossplane/provider-kubernetes-install.yaml
 ```
 
-Wait until the provider is healthy:
+Wait until the provider is healthy (can take 1–2 minutes):
 
 ```bash
 kubectl get providers.pkg.crossplane.io
 # provider-kubernetes should show HEALTHY
 ```
 
-### 2.2 Default ProviderConfig for provider-kubernetes (in-cluster)
+### 2.2 Install the patch-and-transform function (required for pipeline compositions)
+
+Crossplane v2 uses **pipeline** mode for Compositions. Install the function first:
+
+```bash
+kubectl apply -f crossplane/function-patch-and-transform-install.yaml
+```
+
+Wait until it’s healthy:
+
+```bash
+kubectl get functions.pkg.crossplane.io
+# function-patch-and-transform should show HEALTHY
+```
+
+### 2.3 Default ProviderConfig for provider-kubernetes (in-cluster)
 
 Create a config so the provider uses the same cluster (e.g. your k3s):
 
@@ -61,7 +78,7 @@ spec:
 EOF
 ```
 
-### 2.3 Apply the XRD and both compositions
+### 2.4 Apply the XRD and both compositions
 
 ```bash
 kubectl apply -f crossplane/xrd-database-instance.yaml
@@ -94,11 +111,12 @@ Wait for pods:
 kubectl get pods -n gatekeeper-system
 ```
 
-Then apply the DatabaseInstance policy:
+Then apply the DatabaseInstance policy. **Order matters:** the ConstraintTemplate creates the CRD; only then can you create the Constraint:
 
 ```bash
 kubectl apply -f opa/constraint-template-database-instance.yaml
-sleep 10
+# Wait for Gatekeeper to create the DatabaseInstancePolicy CRD (10–30s)
+kubectl wait --for=condition=Established crd/databaseinstancepolicies.constraints.gatekeeper.sh --timeout=60s
 kubectl apply -f opa/constraint-database-instance.yaml
 ```
 
@@ -120,14 +138,19 @@ kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-Wait for pods, then port-forward the UI:
+Wait for pods, then expose the UI (see below for **remote server**).
 
-```bash
-kubectl wait --for=condition=Available deployment/argocd-server -n argocd --timeout=120s
-kubectl port-forward svc/argocd-server -n argocd 8080:443
-```
+**Argo CD is on a remote server** (you can’t open a browser on the server):
 
-Open https://localhost:8080 (accept the TLS warning). Login: `admin`, password:
+- **Bind port-forward to all interfaces**  
+  On the **remote server**, run:
+  ```bash
+  kubectl port-forward --address 0.0.0.0 svc/argocd-server -n argocd 8080:443
+  ```
+  Then from your local browser open https://REMOTE_SERVER_IP:8080.  
+  Ensure port 8080 is allowed in the server’s firewall/security group. Prefer Option A if the server is on the internet.
+
+Login: `admin`, password:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d && echo
@@ -200,7 +223,7 @@ When you want to show real cloud provisioning:
 | Done | Step |
 |------|------|
 | ☐ | 1. Create GitHub repo, push this code |
-| ☐ | 2. Install provider-kubernetes, ProviderConfig, apply XRD + compositions |
+| ☐ | 2. Install provider-kubernetes, function-patch-and-transform, ProviderConfig, apply XRD + compositions |
 | ☐ | 3. Install Gatekeeper, apply ConstraintTemplate + Constraint |
 | ☐ | 4. Install Argo CD, set repoURL, apply Application |
 | ☐ | 5. Add `compositionRef: name: db-demo-local` to `platform/prod-db.yaml`, push |

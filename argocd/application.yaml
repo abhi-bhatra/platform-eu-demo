@@ -1,5 +1,4 @@
 # Argo CD Application — watches platform/ in this repo
-# Replace REPO_URL with your actual Git URL (e.g. https://github.com/yourorg/kubecon-eu)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -10,7 +9,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: REPO_URL
+    repoURL: https://github.com/abhi-bhatra/platform-eu-demo.git
     targetRevision: HEAD
     path: platform
   destination:

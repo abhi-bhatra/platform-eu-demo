@@ -10,10 +10,8 @@ spec:
     spec:
       names:
         kind: DatabaseInstancePolicy
-        listKind: DatabaseInstancePolicyList
-        plural: databaseinstancepolicies
-        singular: databaseinstancepolicy
       validation:
+        # Schema for the parameters section of the Constraint (content of spec.parameters).
         openAPIV3Schema:
           type: object
           properties:
