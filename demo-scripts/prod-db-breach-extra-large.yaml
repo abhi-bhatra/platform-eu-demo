@@ -1,0 +1,10 @@
+# Step B demo: BREACH — size: extra-large (OPA will block)
+# Copy this over platform/prod-db.yaml, commit, push — Argo CD sync fails
+apiVersion: myplatform.io/v1
+kind: DatabaseInstance
+metadata:
+  name: checkout-db
+spec:
+  size: extra-large   # <-- OPA: "Instance size not allowed!"
+  region: eu-west-1
+  team: checkout

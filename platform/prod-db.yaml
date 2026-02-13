@@ -1,0 +1,13 @@
+# Happy path — 10-line contract (Slide 6)
+# Argo CD syncs this; Crossplane provisions; OPA allows (private, small).
+# compositionRef: db-demo-local = no cloud (ConfigMap on k3s). Remove it to use AWS (db-small-eu-west).
+apiVersion: myplatform.io/v1
+kind: DatabaseInstance
+metadata:
+  name: checkout-db
+spec:
+  compositionRef:
+    name: db-demo-local
+  size: small
+  region: eu-west-1
+  team: checkout

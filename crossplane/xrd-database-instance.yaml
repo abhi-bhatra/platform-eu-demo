@@ -1,0 +1,45 @@
+# Composite Resource Definition (XRD) — Slide 6 contract
+# apiVersion: myplatform.io/v1, kind: DatabaseInstance
+# Developer-facing API; composition does the rest (VPC, DB, IAM).
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: databaseinstances.myplatform.io
+spec:
+  group: myplatform.io
+  names:
+    kind: DatabaseInstance
+    plural: databaseinstances
+  claimNames:
+    kind: DatabaseInstance
+    plural: databaseinstances
+  defaultCompositionRef:
+    name: db-small-eu-west
+  versions:
+    - name: v1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                size:
+                  type: string
+                  enum: [small, medium]
+                  description: "small | medium only; extra-large forbidden by OPA"
+                region:
+                  type: string
+                  description: "e.g. eu-west-1"
+                team:
+                  type: string
+                  description: "Team owning the database"
+                public:
+                  type: boolean
+                  description: "If true, OPA policy denies (must be private)"
+              required:
+                - size
+                - region
+                - team

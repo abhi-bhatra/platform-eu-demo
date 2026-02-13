@@ -1,0 +1,48 @@
+# Gatekeeper ConstraintTemplate: DatabaseInstance policy
+# Denies: public: true, or size: extra-large
+# Error messages shown in Argo CD when sync fails
+apiVersion: templates.gatekeeper.sh/v1
+kind: ConstraintTemplate
+metadata:
+  name: databaseinstancepolicy
+spec:
+  crd:
+    spec:
+      names:
+        kind: DatabaseInstancePolicy
+        listKind: DatabaseInstancePolicyList
+        plural: databaseinstancepolicies
+        singular: databaseinstancepolicy
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            forbiddenSizes:
+              type: array
+              items:
+                type: string
+              description: "e.g. [extra-large]"
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package databaseinstancepolicy
+
+        # Block if spec.public is true
+        violation[{"msg": msg}] {
+          obj := input.review.object
+          obj.kind == "DatabaseInstance"
+          obj.apiVersion == "myplatform.io/v1"
+          obj.spec.public == true
+          msg := "Database must be private! Public access is not allowed."
+        }
+
+        # Block if spec.size is in forbidden list (e.g. extra-large)
+        violation[{"msg": msg}] {
+          obj := input.review.object
+          obj.kind == "DatabaseInstance"
+          obj.apiVersion == "myplatform.io/v1"
+          size := obj.spec.size
+          forbidden := input.parameters.forbiddenSizes[_]
+          size == forbidden
+          msg := sprintf("Instance size %q is not allowed. Use small or medium.", [size])
+        }

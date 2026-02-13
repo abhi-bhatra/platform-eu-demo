@@ -1,0 +1,14 @@
+# Constraint: instantiate the policy for DatabaseInstance
+# Applied to the cluster; Argo CD sync will fail when manifest violates.
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: DatabaseInstancePolicy
+metadata:
+  name: deny-public-and-extra-large
+spec:
+  match:
+    kinds:
+      - apiGroups: ["myplatform.io"]
+        kinds: ["DatabaseInstance"]
+  parameters:
+    forbiddenSizes:
+      - extra-large

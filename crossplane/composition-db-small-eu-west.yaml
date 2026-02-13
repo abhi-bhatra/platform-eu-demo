@@ -1,0 +1,53 @@
+# Composition: DatabaseInstance (small) -> AWS RDS + VPC + IAM
+# Matches Slide 6: db-small-eu-west, resources (vpc, database, iam)
+# Requires: Upbound provider-aws (ec2, rds, iam) + ProviderConfig.
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: db-small-eu-west
+  labels:
+    provider: aws
+spec:
+  compositeTypeRef:
+    apiVersion: myplatform.io/v1
+    kind: DatabaseInstance
+  resources:
+    - name: vpc
+      base:
+        apiVersion: ec2.aws.upbound.io/v1beta1
+        kind: VPC
+        spec:
+          forProvider:
+            region: eu-west-1
+            cidrBlock: "10.0.0.0/16"
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.region
+          toFieldPath: spec.forProvider.region
+    - name: database
+      base:
+        apiVersion: rds.aws.upbound.io/v1beta1
+        kind: Instance
+        spec:
+          forProvider:
+            region: eu-west-1
+            instanceClass: db.t3.micro
+            allocatedStorage: 20
+            engine: postgres
+            engineVersion: "15"
+            backupRetentionPeriod: 7
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.region
+          toFieldPath: spec.forProvider.region
+    - name: iam-role
+      base:
+        apiVersion: iam.aws.upbound.io/v1beta1
+        kind: Role
+        spec:
+          forProvider:
+            region: eu-west-1
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.region
+          toFieldPath: spec.forProvider.region

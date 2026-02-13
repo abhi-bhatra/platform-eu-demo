@@ -1,0 +1,50 @@
+# Demo-only composition: no cloud required (k3s / any cluster)
+# Creates a ConfigMap "database" so the full demo flow works without AWS.
+# Use this when you don't have cloud credentials (e.g. local k3s demo).
+#
+# Apply this + use compositionRef in your claim:
+#   spec:
+#     compositionRef:
+#       name: db-demo-local
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: db-demo-local
+  labels:
+    provider: kubernetes
+spec:
+  compositeTypeRef:
+    apiVersion: myplatform.io/v1
+    kind: DatabaseInstance
+  resources:
+    - name: database-demo
+      base:
+        apiVersion: kubernetes.crossplane.io/v1alpha2
+        kind: Object
+        spec:
+          forProvider:
+            manifest:
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                namespace: default
+                labels:
+                  platform: backend-first-demo
+              data:
+                kind: database
+                size: "small"
+                region: eu-west-1
+                team: checkout
+      patches:
+        - type: FromCompositeFieldPath
+          fromFieldPath: metadata.name
+          toFieldPath: spec.forProvider.manifest.metadata.name
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.size
+          toFieldPath: spec.forProvider.manifest.data.size
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.region
+          toFieldPath: spec.forProvider.manifest.data.region
+        - type: FromCompositeFieldPath
+          fromFieldPath: spec.team
+          toFieldPath: spec.forProvider.manifest.data.team

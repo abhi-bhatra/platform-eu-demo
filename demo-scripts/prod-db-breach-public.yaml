@@ -1,0 +1,11 @@
+# Step B demo: BREACH — public: true (OPA will block)
+# Copy this over platform/prod-db.yaml, commit, push — Argo CD sync fails
+apiVersion: myplatform.io/v1
+kind: DatabaseInstance
+metadata:
+  name: checkout-db
+spec:
+  size: small
+  region: eu-west-1
+  team: checkout
+  public: true   # <-- OPA: "Database must be private!"
