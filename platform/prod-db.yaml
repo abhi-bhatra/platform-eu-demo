@@ -11,4 +11,3 @@ spec:
   size: small
   region: eu-west-1
   team: checkout
-  public: true
