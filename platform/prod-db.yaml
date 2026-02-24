@@ -8,7 +8,7 @@ metadata:
 spec:
   compositionRef:
     name: db-demo-local
-  size: medium
+  size: extra-large
   region: eu-west-1
   team: checkout
   public: false
